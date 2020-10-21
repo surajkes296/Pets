@@ -2,6 +2,7 @@ package com.example.pets;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
@@ -19,21 +20,31 @@ import android.widget.Toast;
 import com.example.pets.data.PetContract.PetEntry;
 import com.example.pets.data.PetDbHelper;
 
+import java.net.URI;
+
 /**
  * Allows user to create a new pet or edit an existing one.
  */
 public class EditorActivity extends AppCompatActivity {
 
-    /** EditText field to enter the pet's name */
+    /**
+     * EditText field to enter the pet's name
+     */
     private EditText mNameEditText;
 
-    /** EditText field to enter the pet's breed */
+    /**
+     * EditText field to enter the pet's breed
+     */
     private EditText mBreedEditText;
 
-    /** EditText field to enter the pet's weight */
+    /**
+     * EditText field to enter the pet's weight
+     */
     private EditText mWeightEditText;
 
-    /** EditText field to enter the pet's gender */
+    /**
+     * EditText field to enter the pet's gender
+     */
     private Spinner mGenderSpinner;
 
     /**
@@ -62,7 +73,7 @@ public class EditorActivity extends AppCompatActivity {
     private void setupSpinner() {
         // Create adapter for spinner. The list options are from the String array it will use
         // the spinner will use the default layout
-        ArrayAdapter genderSpinnerAdapter = ArrayAdapter.createFromResource(this,R.array.array_gender_options, android.R.layout.simple_spinner_item);
+        ArrayAdapter genderSpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.array_gender_options, android.R.layout.simple_spinner_item);
 
         // Specify dropdown layout style - simple list view with 1 item per line
         genderSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
@@ -123,23 +134,34 @@ public class EditorActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    private void insertPets(){
-        int gender=mGender;
-        int weight=Integer.parseInt(mWeightEditText.getText().toString().trim());
-        String name=mNameEditText.getText().toString().trim();
-        String breed=mBreedEditText.getText().toString().trim();
-        ContentValues values=new ContentValues();
 
-        values.put(PetEntry.COLUMN_PET_NAME,name);
-        values.put(PetEntry.COLUMN_PET_BREED,breed);
-        values.put(PetEntry.COLUMN_PET_GENDER,gender);
-        values.put(PetEntry.COLUMN_PET_WEIGHT,weight);
+    private void insertPets() {
+        int gender = mGender;
+        int weight = Integer.parseInt(mWeightEditText.getText().toString().trim());
+        String name = mNameEditText.getText().toString().trim();
+        String breed = mBreedEditText.getText().toString().trim();
+        ContentValues contentValues = new ContentValues();
 
+        contentValues.put(PetEntry.COLUMN_PET_NAME, name);
+        contentValues.put(PetEntry.COLUMN_PET_BREED, breed);
+        contentValues.put(PetEntry.COLUMN_PET_GENDER, gender);
+        contentValues.put(PetEntry.COLUMN_PET_WEIGHT, weight);
 
+/*
         // Create and/or open a database to read from it
-        SQLiteDatabase db = new PetDbHelper(this).getWritableDatabase();
-        long newRowId=db.insert(PetEntry.TABLE_NAME,null,values);
-        Log.v("CatalogActivity","New Row Id:"+newRowId);
-        Toast.makeText(this,(newRowId==-1)?"Error setting new Id in Database":"Pet saved with row Id:"+newRowId,Toast.LENGTH_SHORT).show();
+        SQLiteDatabase db = new PetDbHelper(this).getWritableDatabase();*/
+
+        //using contentResolver of contentProvider instead of directly accessing the database
+        Uri newUri = getContentResolver().insert(PetEntry.CONTENT_URI, contentValues);
+        Log.v("CatalogActivity", "New Row Id:" + newUri);
+        if (newUri == null) {
+            // If the new content URI is null, then there was an error with insertion.
+            Toast.makeText(this, getString(R.string.editor_insert_pet_failed),
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            // Otherwise, the insertion was successful and we can display a toast.
+            Toast.makeText(this, getString(R.string.editor_insert_pet_successful),
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 }
